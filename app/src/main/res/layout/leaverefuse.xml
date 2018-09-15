@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/editborder"
+        android:id="@+id/leaverefuseremark"
+        android:lines="5"
+        android:layout_margin="15dp"
+        android:gravity="top"
+        android:hint="请输入审核意见"/>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/leaverefusesubmit"
+        android:layout_margin="15dp"
+        android:text="拒绝"
+        android:background="@color/colorRefuse"
+        android:textColor="#fff"
+        android:textSize="25sp"/>
+
+
+</LinearLayout>

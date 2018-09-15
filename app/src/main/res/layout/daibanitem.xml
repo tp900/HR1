@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fff"
+    android:paddingTop="1dp">
+    <TextView
+        android:layout_width="60dp"
+        android:layout_height="100dp"
+        android:id="@+id/item_head"
+        android:background="#37AEF0"
+        android:text="调休"
+        android:textColor="#fff"
+        android:textSize="35sp"
+        android:gravity="center"/>
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="100dp"
+        android:layout_weight="1"
+        android:paddingLeft="20dp"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="姓名:田平"
+            android:textColor="#3A3D3E"
+            android:id="@+id/item_empname"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="部门:部门"
+            android:textColor="#3A3D3E"
+            android:id="@+id/item_dept"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="时间:2018-09-01 10:20 至 2018-09-03 20:10"
+            android:textColor="#3A3D3E"
+            android:id="@+id/item_date"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="事由:有事事有事有"
+            android:textColor="#3A3D3E"
+            android:id="@+id/item_remark"/>
+    </LinearLayout>
+</LinearLayout>

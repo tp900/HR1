@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="2dp">
+    <TextView
+        android:layout_width="5dp"
+        android:layout_height="match_parent"
+        android:id="@+id/qj_head"/>
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="10dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="状态:待审批"
+            android:textColor="#3A3D3E"
+            android:id="@+id/qj_status"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="时长:1 天 4 小时"
+            android:textColor="#3A3D3E"
+            android:id="@+id/qj_days"
+            android:layout_marginTop="5dp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="时间:2018-09-01 10:20 至 2018-09-03 20:10"
+            android:textColor="#3A3D3E"
+            android:id="@+id/qj_date"
+            android:layout_marginTop="5dp"/>
+
+    </LinearLayout>
+</LinearLayout>

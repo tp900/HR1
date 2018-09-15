@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="10dp"
+    android:background="@drawable/raiduborder"
+    android:orientation="vertical">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="日期:2018-09-01"
+        android:textColor="#3A3D3E"
+        android:id="@+id/bkdate"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="状态:待审批"
+        android:textColor="#3A3D3E"
+        android:id="@+id/status"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="上午:8 时 0 分 至 11 时 40 分"
+        android:textColor="#3A3D3E"
+        android:id="@+id/am"
+        android:layout_marginTop="5dp"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="下午:14 时 0 分 至 18 时 20 分"
+        android:textColor="#3A3D3E"
+        android:id="@+id/pm"
+        android:layout_marginTop="5dp"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="加班:19 时 0 分 至 23 时 0 分"
+        android:textColor="#3A3D3E"
+        android:id="@+id/jb"
+        android:layout_marginTop="5dp"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="原因:漏打卡,其它"
+        android:textColor="#3A3D3E"
+        android:id="@+id/yy"
+        android:layout_marginTop="5dp"/>
+    <View android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorPass"
+        android:layout_marginTop="20dp"></View>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/close"
+        android:textColor="@color/colorWhite"
+        android:background="@color/colorPass"
+        android:layout_marginTop="15dp"
+        android:textSize="25dp"
+        android:text="关闭"/>
+
+</LinearLayout>
