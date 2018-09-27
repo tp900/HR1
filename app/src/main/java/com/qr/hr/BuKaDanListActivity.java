@@ -32,6 +32,10 @@ import com.qr.hr.modles.BuKa;
 import com.qr.hr.modles.BuKaD;
 import com.qr.hr.modles.BuKaDanItem;
 import com.qr.hr.modles.Messages;
+import com.qr.hr.swipe.Menu;
+import com.qr.hr.swipe.MenuCreator;
+import com.qr.hr.swipe.MenuItem;
+import com.qr.hr.swipe.MyListView;
 import com.qr.hr.utils.HttpUtil;
 import com.qr.hr.utils.ProcessDialogUtil;
 import com.qr.hr.utils.Utils;
@@ -64,8 +68,7 @@ public class BuKaDanListActivity extends BaseActivity {
     private EditText et_EDate;
     private Button bt_Submit;
     private Button bt_Cancel;
-    private SwipeMenuListView listView;
-    private SwipeMenuCreator creator;
+    private MyListView listView;
     private List<BuKaDanItem> buKaList = new ArrayList<>();
     private BuKa currentBuKa;
     private int CurrentPostion;
@@ -98,7 +101,7 @@ public class BuKaDanListActivity extends BaseActivity {
         et_EDate.setInputType(InputType.TYPE_NULL);
         bt_Submit = findViewById(R.id.submit);
         bt_Cancel=findViewById(R.id.cancel);
-        listView = findViewById(R.id.listview);
+        listView = findViewById(R.id.bukadanlist);
         swipeRefreshLayout = findViewById(R.id.refreshlayout);
         swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -109,12 +112,36 @@ public class BuKaDanListActivity extends BaseActivity {
         });
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(BuKaDanListActivity.this);
         empNo = preferences.getString("emp_no","");
-
-        buKaDanAdapter = new BuKaDanAdapter(buKaList,empNo,BuKaDanListActivity.this);
+        InitAdapter();
         listView.setAdapter(buKaDanAdapter);
-        InitCreator();
-        listView.setMenuCreator(creator);
         InitBuKaDanList();
+    }
+    private void InitAdapter(){
+        //设置滑动菜单
+        final MenuCreator menuCreator = new MenuCreator() {
+            @Override
+            public void CreateMenu(Menu menu) {
+                if(menu.getMenuType()==0){
+                    createMenu(menu);
+                }
+            }
+            private void createMenu(Menu menu) {
+                MenuItem item1 = new MenuItem(getApplicationContext());
+                item1.setBackground(R.color.colorRefuse);
+                item1.setWidth(dp2px(50));
+                item1.setTitle("删除");
+                item1.setTitleColor(Color.WHITE);
+                item1.setTitleSize(18);
+                item1.setId(0);
+                menu.menuItems.add(item1);
+            }
+        };
+        buKaDanAdapter = new BuKaDanAdapter(buKaList,empNo,BuKaDanListActivity.this){
+            @Override
+            public void CreateMenu(Menu menu) {
+                menuCreator.CreateMenu(menu);
+            }
+        };
     }
     private void BindEvent(){
         bt_Back.setOnClickListener(GoBack);
@@ -124,7 +151,7 @@ public class BuKaDanListActivity extends BaseActivity {
         et_EDate.setOnClickListener(SelectEDate);
         bt_Submit.setOnClickListener(OnSubmit);
         bt_Cancel.setOnClickListener(CancelFind);
-        listView.setOnMenuItemClickListener(OnMenuClick);
+
     }
 
     //加载近三月补卡单
@@ -187,90 +214,9 @@ public class BuKaDanListActivity extends BaseActivity {
         });
 
     }
-    //设置滑动菜单
-    private void InitCreator(){
-        creator = new SwipeMenuCreator() {
-            @Override
-            public void create(SwipeMenu menu) {
-                if(menu.getViewType()==0){
-                    createMenu2(menu);
-                }
-
-            }
-            private void createMenu2(SwipeMenu menu) {
-                SwipeMenuItem item1 = new SwipeMenuItem(
-                        getApplicationContext());
-                item1.setBackground(R.color.colorRefuse);
-                item1.setWidth(dp2px(90));
-                item1.setTitle("删除");
-                item1.setTitleColor(Color.WHITE);
-                item1.setTitleSize(18);
-                menu.addMenuItem(item1);
-            }
-        };
-    }
-    //设置滑动菜单点击事件
-    private SwipeMenuListView.OnMenuItemClickListener OnMenuClick = new SwipeMenuListView.OnMenuItemClickListener() {
-        @Override
-        public boolean onMenuItemClick(final int position, final SwipeMenu menu, int index) {
-            dialogUtil.ShowAlertDialog("确定删除?", BuKaDanListActivity.this, new DialogCallBack() {
-                @Override
-                public void IsSure(Object obj) {
-                    BuKaDanItem item = buKaList.get(position);
-                    dialogUtil.ShowProgressDialog1("处理中...",BuKaDanListActivity.this);
-                    String url = getResources().getString(R.string.url)+"CancelBuKa";
-                    RequestBody body = new FormBody.Builder().add("empno",item.approve).add("id",item.id+"").build();
-                    HttpUtil.SendOkHttpRequest(url, body, new Callback() {
-                        @Override
-                        public void onFailure(Call call, IOException e) {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    dialogUtil.CloseProgressDialog1();
-                                    Toast.makeText(BuKaDanListActivity.this,"删除失败,请重试",Toast.LENGTH_LONG).show();
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void onResponse(Call call, Response response) throws IOException {
-                            final String sResponse = response.body().string();
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try{
-                                        JSONObject jsonObject = new JSONObject(sResponse);
-                                        String s = jsonObject.toString();
-                                        Messages messages = new Gson().fromJson(s,Messages.class);
-
-                                        if(messages.status==1){
-                                            buKaList.remove(position);
-                                            buKaDanAdapter.notifyDataSetChanged();
-                                        }
-                                        dialogUtil.CloseProgressDialog1();
-                                        Toast.makeText(BuKaDanListActivity.this,messages.msg,Toast.LENGTH_LONG).show();
-                                    }catch (Exception ex){
-                                        dialogUtil.CloseProgressDialog1();
-                                        Toast.makeText(BuKaDanListActivity.this,"未知错误",Toast.LENGTH_LONG).show();
-                                    }finally {
-                                        dialogUtil.CloseProgressDialog1();
-                                    }
-                                }
-                            });
-                        }
-                    });
 
 
-                }
 
-                @Override
-                public void IsCancel() {
-
-                }
-            });
-            return false;
-        }
-    };
     private int dp2px(int dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
                 getResources().getDisplayMetrics());

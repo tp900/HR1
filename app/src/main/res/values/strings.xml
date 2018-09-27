@@ -22,4 +22,6 @@
     <string name="mytiaoxoulist">我的调休单</string>
     <string name="mybukalist">我的补卡单</string>
     <string name="bukadan">补卡单</string>
+    <string name="updateAddress">http://113.98.54.51:8001/</string>
+    <string name="ver">1.02</string>
 </resources>

@@ -34,7 +34,8 @@
         <activity android:name=".QingJiaListActivity" />
         <activity android:name=".TiaoXiuListActivity" />
         <activity android:name=".BukaDanActivity" />
-        <activity android:name=".BuKaDanListActivity"></activity>
+        <activity android:name=".BuKaDanListActivity" />
+        <activity android:name=".UpdateActivity"></activity>
     </application>
 
 </manifest>

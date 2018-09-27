@@ -26,7 +26,12 @@ public class BaseActivity extends AppCompatActivity {
             window.setStatusBarColor(Color.TRANSPARENT);
         }
         Intent intent = new Intent(this, NotifService.class);
-        startService(intent);
+        //startService(intent);
+        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
+            startForegroundService(intent);
+        }else{
+            startService(intent);
+        }
     }
 
     @Override

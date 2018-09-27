@@ -57,7 +57,7 @@ public class LoginActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 //Utils.ShowProgressDialog("正在登录...",LoginActivity.this);
-                dialogUtil.ShowProgressDialog1("正在登录...",LoginActivity.this);
+
                 String sUserName = textUserName.getText().toString();
                 String sPWD = textPWD.getText().toString();
                 Boolean flg = true;
@@ -70,7 +70,7 @@ public class LoginActivity extends BaseActivity {
                     ValidPWD();
                 }
                 if(flg){
-
+                    dialogUtil.ShowProgressDialog1("正在登录...",LoginActivity.this);
                     //String url = "http://192.168.22.17/Services/API.asmx/Login";
                     String url = getResources().getString(R.string.url)+"Login";
                     RequestBody formBody = new FormBody.Builder()

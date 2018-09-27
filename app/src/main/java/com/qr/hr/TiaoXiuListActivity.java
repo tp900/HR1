@@ -34,6 +34,10 @@ import com.google.gson.Gson;
 import com.qr.hr.modles.Messages;
 import com.qr.hr.modles.QiangJiaDan;
 import com.qr.hr.modles.TiaoXiuDan;
+import com.qr.hr.swipe.Menu;
+import com.qr.hr.swipe.MenuCreator;
+import com.qr.hr.swipe.MenuItem;
+import com.qr.hr.swipe.MyListView;
 import com.qr.hr.utils.HttpUtil;
 import com.qr.hr.utils.ProcessDialogUtil;
 import com.qr.hr.utils.Utils;
@@ -54,15 +58,14 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class TiaoXiuListActivity extends BaseActivity {
-    private List<TiaoXiuDan> leaves =new ArrayList<>();
-    private SwipeMenuListView swipeMenuListView;
+    private List<TiaoXiuDan> leaves = new ArrayList<>();
+    private MyListView myListView;
     private Button bt_back;
     private Button bt_add;
     private TiaoXiuDan cLeave;
     private int cPostion;
     private String empNo;
-    private TiaoXiuListActivity.AppAdapter appAdapter;
-    private SwipeMenuCreator creator;
+    private TiaoXiuListAdapter appAdapter;
     private AlertDialog alertDialog;
     private Button bt_find;
     private QingJiaFilter qingJiaFilter;
@@ -76,12 +79,13 @@ public class TiaoXiuListActivity extends BaseActivity {
     private Button bt_cancel;
     private ProcessDialogUtil dialogUtil = new ProcessDialogUtil();
     private SwipeRefreshLayout swipeRefreshLayout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tiao_xiu_list);
         Utils.CloseProgressDialog();
-        swipeMenuListView = findViewById(R.id.qjlist);
+        myListView = findViewById(R.id.txlist);
         bt_back = findViewById(R.id.qjlist_back);
         bt_add = findViewById(R.id.qjlist_add);
         bt_find = findViewById(R.id.qjlist_find);
@@ -97,13 +101,10 @@ public class TiaoXiuListActivity extends BaseActivity {
         sDate.setInputType(InputType.TYPE_NULL);
         eDate.setInputType(InputType.TYPE_NULL);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        empNo = sharedPreferences.getString("emp_no","");
+        empNo = sharedPreferences.getString("emp_no", "");
         InitTiaoXiuList(empNo);
-        appAdapter = new TiaoXiuListActivity.AppAdapter(empNo);
-        swipeMenuListView.setAdapter(appAdapter);
-        InitCreator();
-        swipeMenuListView.setMenuCreator(creator);
-        swipeMenuListView.setOnMenuItemClickListener(swipeMenuonClick);
+        InitAdapter();
+        myListView.setAdapter(appAdapter);
         bt_back.setOnClickListener(GoBack);
         bt_add.setOnClickListener(Add);
         bt_find.setOnClickListener(Find);
@@ -123,111 +124,40 @@ public class TiaoXiuListActivity extends BaseActivity {
             }
         });
     }
-    //设置滑动菜单
-    private void InitCreator(){
-        creator = new SwipeMenuCreator() {
-            @Override
-            public void create(SwipeMenu menu) {
-                if(menu.getViewType()==2){
-                    createMenu2(menu);
-                }
 
+    private void InitAdapter() {
+        //设置滑动菜单
+        final MenuCreator menuCreator = new MenuCreator() {
+            @Override
+            public void CreateMenu(Menu menu) {
+                if (menu.getMenuType() == 0) {
+                    createMenu(menu);
+                }
             }
-            private void createMenu2(SwipeMenu menu) {
-                SwipeMenuItem item1 = new SwipeMenuItem(
-                        getApplicationContext());
+
+            private void createMenu(Menu menu) {
+                MenuItem item1 = new MenuItem(getApplicationContext());
                 item1.setBackground(R.color.colorRefuse);
-                item1.setWidth(dp2px(90));
+                item1.setWidth(dp2px(50));
                 item1.setTitle("删除");
                 item1.setTitleColor(Color.WHITE);
                 item1.setTitleSize(18);
-                menu.addMenuItem(item1);
+                item1.setId(0);
+                menu.menuItems.add(item1);
+            }
+        };
+        appAdapter = new TiaoXiuListAdapter(leaves, TiaoXiuListActivity.this) {
+            @Override
+            public void CreateMenu(Menu menu) {
+                if (menu.getMenuType() == 0) {
+                    menuCreator.CreateMenu(menu);
+                }
             }
         };
     }
-    //滑动菜单点击事件
-    private SwipeMenuListView.OnMenuItemClickListener swipeMenuonClick = new SwipeMenuListView.OnMenuItemClickListener() {
-        @Override
-        public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
-
-            final TiaoXiuDan leave = leaves.get(position);
-            cLeave = leave;
-            cPostion = position;
-            //Toast.makeText(MainActivity.this,"删除",Toast.LENGTH_SHORT).show();
-            alertDialog = new AlertDialog.Builder(TiaoXiuListActivity.this)
-                    .setTitle("提示!")
-                    .setMessage("确认要删除?")
-                    .setPositiveButton("删除", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    //开始
-                                    alertDialog.dismiss();
-                                    dialogUtil.ShowProgressDialog1("处理中...",TiaoXiuListActivity.this);
-                                    //Utils.ShowProgressDialog("处理中...",TiaoXiuListActivity.this);
-                                    String url = "";
-                                    url = getResources().getString(R.string.url)+"CancleLeaveTX";
-                                    RequestBody body1 = new FormBody.Builder()
-                                            .add("id",leave.id+"").build();
-                                    HttpUtil.SendOkHttpRequest(url, body1, new Callback() {
-                                        @Override
-                                        public void onFailure(Call call, IOException e) {
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    //Utils.CloseProgressDialog();
-                                                    dialogUtil.CloseProgressDialog1();
-                                                    Toast.makeText(TiaoXiuListActivity.this, "服务器连接失败,请重试", Toast.LENGTH_LONG).show();
-                                                }
-                                            });
-
-                                        }
-
-                                        @Override
-                                        public void onResponse(Call call, Response response) throws IOException {
-                                            final String sResponse = response.body().string();
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    try{
-                                                        JSONObject jsonObject = new JSONObject(sResponse);
-                                                        String s = jsonObject.toString();
-                                                        Messages messages = new Gson().fromJson(s,Messages.class);
-                                                        dialogUtil.CloseProgressDialog1();
-                                                        Toast.makeText(TiaoXiuListActivity.this, messages.msg, Toast.LENGTH_LONG).show();
-                                                        if(messages.status==1){
-                                                            leaves.remove(cPostion);
-                                                            appAdapter.notifyDataSetChanged();
-                                                        }
-                                                    }catch (Exception ex){
-                                                        dialogUtil.CloseProgressDialog1();
-                                                        Toast.makeText(TiaoXiuListActivity.this, "未知错误", Toast.LENGTH_LONG).show();
-                                                    }finally {
-                                                        dialogUtil.CloseProgressDialog1();
-                                                    }
 
 
-                                                }
-                                            });
-                                        }
-                                    });
-                                }
 
-                                //结束
-                            }
-                    )
-                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            alertDialog.dismiss();
-                        }
-                    })
-                    .setCancelable(false)
-                    .create();
-            alertDialog.show();
-
-            return false;
-        }
-    };
     //返回按钮
     private View.OnClickListener GoBack = new View.OnClickListener() {
         @Override
@@ -239,8 +169,8 @@ public class TiaoXiuListActivity extends BaseActivity {
     private View.OnClickListener Add = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(TiaoXiuListActivity.this,TiaoXiuActivity.class);
-            startActivityForResult(intent,1);
+            Intent intent = new Intent(TiaoXiuListActivity.this, TiaoXiuActivity.class);
+            startActivityForResult(intent, 1);
         }
     };
 
@@ -248,7 +178,7 @@ public class TiaoXiuListActivity extends BaseActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         //新增完成时返回重新加载数据
-        if(resultCode==3){
+        if (resultCode == 3) {
             InitTiaoXiuList(empNo);
         }
     }
@@ -264,27 +194,27 @@ public class TiaoXiuListActivity extends BaseActivity {
     private View.OnClickListener FindResult = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            dialogUtil.ShowProgressDialog1("查询中...",TiaoXiuListActivity.this);
+            dialogUtil.ShowProgressDialog1("查询中...", TiaoXiuListActivity.this);
             //Utils.ShowProgressDialog("查询中...",TiaoXiuListActivity.this);
-            String sWanjie = wanjie.isChecked()?"1":"0";
-            String sDaishen = daishen.isChecked()?"1":"0";
-            String sJuejue = juejue.isChecked()?"1":"0";
+            String sWanjie = wanjie.isChecked() ? "1" : "0";
+            String sDaishen = daishen.isChecked() ? "1" : "0";
+            String sJuejue = juejue.isChecked() ? "1" : "0";
             String sStartDate = sDate.getText().toString();
             String sEndDate = eDate.getText().toString();
-            if(empNo.isEmpty()){
+            if (empNo.isEmpty()) {
                 //Utils.CloseProgressDialog();
                 dialogUtil.CloseProgressDialog1();
                 return;
             }
             RequestBody body = new FormBody.Builder()
-                    .add("empno",empNo)
-                    .add("wanjie",sWanjie)
-                    .add("juejue",sJuejue)
-                    .add("daishen",sDaishen)
-                    .add("sdate",sStartDate)
-                    .add("edate",sEndDate)
+                    .add("empno", empNo)
+                    .add("wanjie", sWanjie)
+                    .add("juejue", sJuejue)
+                    .add("daishen", sDaishen)
+                    .add("sdate", sStartDate)
+                    .add("edate", sEndDate)
                     .build();
-            String url = getResources().getString(R.string.url)+"FindLeaveTX";
+            String url = getResources().getString(R.string.url) + "FindLeaveTX";
             HttpUtil.SendOkHttpRequest(url, body, new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
@@ -293,7 +223,7 @@ public class TiaoXiuListActivity extends BaseActivity {
                         public void run() {
                             //Utils.CloseProgressDialog();
                             dialogUtil.CloseProgressDialog1();
-                            Toast.makeText(TiaoXiuListActivity.this,"服务器连接失败,请重试",Toast.LENGTH_SHORT);
+                            Toast.makeText(TiaoXiuListActivity.this, "服务器连接失败,请重试", Toast.LENGTH_SHORT);
                         }
                     });
                 }
@@ -309,15 +239,15 @@ public class TiaoXiuListActivity extends BaseActivity {
                                 JSONArray jsonArray = new JSONArray(sResponse);
                                 JSONObject jsonObject = jsonArray.getJSONObject(0);
                                 String jsonStr = jsonObject.toString();
-                                Messages messages = new Gson().fromJson(jsonStr,Messages.class);
-                                if(messages.status==1){
+                                Messages messages = new Gson().fromJson(jsonStr, Messages.class);
+                                if (messages.status == 1) {
                                     JSONArray jsonArray1 = jsonArray.getJSONArray(1);
-                                    if(null!=jsonArray1&&jsonArray1.length()>0){
+                                    if (null != jsonArray1 && jsonArray1.length() > 0) {
 
-                                        for(int i = 0;i<jsonArray1.length();i++){
+                                        for (int i = 0; i < jsonArray1.length(); i++) {
                                             JSONObject jsonObject1 = jsonArray1.getJSONObject(i);
                                             String jsonStr1 = jsonObject1.toString();
-                                            TiaoXiuDan dan = new Gson().fromJson(jsonStr1,TiaoXiuDan.class);
+                                            TiaoXiuDan dan = new Gson().fromJson(jsonStr1, TiaoXiuDan.class);
                                             leaves.add(dan);
                                         }
 
@@ -327,10 +257,10 @@ public class TiaoXiuListActivity extends BaseActivity {
                                 }
                                 dialogUtil.CloseProgressDialog1();
                                 appAdapter.notifyDataSetChanged();
-                            }catch (Exception ex){
+                            } catch (Exception ex) {
                                 dialogUtil.CloseProgressDialog1();
-                                Toast.makeText(TiaoXiuListActivity.this,"未知错误",Toast.LENGTH_SHORT);
-                            }finally {
+                                Toast.makeText(TiaoXiuListActivity.this, "未知错误", Toast.LENGTH_SHORT);
+                            } finally {
                                 dialogUtil.CloseProgressDialog1();
                             }
 
@@ -342,7 +272,7 @@ public class TiaoXiuListActivity extends BaseActivity {
         }
     };
     //取消查询
-    private View.OnClickListener Cancel=new View.OnClickListener() {
+    private View.OnClickListener Cancel = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             qj_filter.setVisibility(View.GONE);
@@ -361,8 +291,8 @@ public class TiaoXiuListActivity extends BaseActivity {
                 }
             }).setCancelText("取消")
                     .setSubmitText("确定")
-                    .setType(new boolean[]{true,true,true,true,true,true})
-                    .setLabel("年","月","日","时","分","秒")
+                    .setType(new boolean[]{true, true, true, true, true, true})
+                    .setLabel("年", "月", "日", "时", "分", "秒")
                     .build();
             pvTime.show();
         }
@@ -380,22 +310,22 @@ public class TiaoXiuListActivity extends BaseActivity {
                 }
             }).setCancelText("取消")
                     .setSubmitText("确定")
-                    .setType(new boolean[]{true,true,true,true,true,true})
-                    .setLabel("年","月","日","时","分","秒")
+                    .setType(new boolean[]{true, true, true, true, true, true})
+                    .setLabel("年", "月", "日", "时", "分", "秒")
                     .build();
             pvTime.show();
         }
     };
 
-    private void InitTiaoXiuList(String empNo){
-        if(empNo.isEmpty()){
+    private void InitTiaoXiuList(String empNo) {
+        if (empNo.isEmpty()) {
             swipeRefreshLayout.setRefreshing(false);
             return;
         }
-        dialogUtil.ShowProgressDialog1("加载中...",TiaoXiuListActivity.this);
+        dialogUtil.ShowProgressDialog1("加载中...", TiaoXiuListActivity.this);
         RequestBody body = new FormBody.Builder()
-                .add("empno",empNo).build();
-        String url = getResources().getString(R.string.url)+"TiaoXiuList";
+                .add("empno", empNo).build();
+        String url = getResources().getString(R.string.url) + "TiaoXiuList";
         HttpUtil.SendOkHttpRequest(url, body, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -404,7 +334,7 @@ public class TiaoXiuListActivity extends BaseActivity {
                     public void run() {
                         dialogUtil.CloseProgressDialog1();
                         swipeRefreshLayout.setRefreshing(false);
-                        Toast.makeText(TiaoXiuListActivity.this,"服务器连接失败,请重试",Toast.LENGTH_LONG).show();
+                        Toast.makeText(TiaoXiuListActivity.this, "服务器连接失败,请重试", Toast.LENGTH_LONG).show();
                     }
                 });
             }
@@ -422,26 +352,26 @@ public class TiaoXiuListActivity extends BaseActivity {
                             JSONArray jsonArray = new JSONArray(sResponse);
                             JSONObject jsonObject = jsonArray.getJSONObject(0);
                             String jsonStr = jsonObject.toString();
-                            Messages messages = new Gson().fromJson(jsonStr,Messages.class);
-                            if(messages.status==1){
+                            Messages messages = new Gson().fromJson(jsonStr, Messages.class);
+                            if (messages.status == 1) {
                                 JSONArray jsonArray1 = jsonArray.getJSONArray(1);
-                                if(null!=jsonArray1&&jsonArray1.length()>0){
-                                    for(int i = 0;i<jsonArray1.length();i++){
+                                if (null != jsonArray1 && jsonArray1.length() > 0) {
+                                    for (int i = 0; i < jsonArray1.length(); i++) {
                                         JSONObject jsonObject1 = jsonArray1.getJSONObject(i);
                                         String jsonStr1 = jsonObject1.toString();
-                                        TiaoXiuDan dan = new Gson().fromJson(jsonStr1,TiaoXiuDan.class);
+                                        TiaoXiuDan dan = new Gson().fromJson(jsonStr1, TiaoXiuDan.class);
                                         leaves.add(dan);
                                     }
                                 }
-                            }else{
-                                Toast.makeText(TiaoXiuListActivity.this,messages.msg,Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(TiaoXiuListActivity.this, messages.msg, Toast.LENGTH_LONG).show();
                             }
                             appAdapter.notifyDataSetChanged();
 
-                        }catch (Exception ex){
+                        } catch (Exception ex) {
                             dialogUtil.CloseProgressDialog1();
                             swipeRefreshLayout.setRefreshing(false);
-                            Toast.makeText(TiaoXiuListActivity.this,"未知错误",Toast.LENGTH_LONG).show();
+                            Toast.makeText(TiaoXiuListActivity.this, "未知错误", Toast.LENGTH_LONG).show();
                         }
                     }
                 });
@@ -449,93 +379,8 @@ public class TiaoXiuListActivity extends BaseActivity {
             }
         });
     }
-    //内部类
-    class AppAdapter extends BaseAdapter {
-        private String empno;
-        public AppAdapter(String empno){
-            this.empno = empno;
-        }
-        @Override
-        public int getCount() {
-            return leaves.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-
-            return leaves.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public int getViewTypeCount() {
-            // menu type count
-            return 3;
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            // current menu type
-            TiaoXiuDan leave = leaves.get(position);
-            if(leave.status.trim().equals("待审核")){
-                return 2;
-            }else{
-                return 0;
-            }
-        }
-
-
-        public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = View.inflate(getApplicationContext(),
-                        R.layout.qingjilist_item, null);
-                new TiaoXiuListActivity.AppAdapter.ViewHolder(convertView);
-            }
-            TiaoXiuListActivity.AppAdapter.ViewHolder holder = (TiaoXiuListActivity.AppAdapter.ViewHolder) convertView.getTag();
-            TiaoXiuDan leave = leaves.get(position);
-
-            holder.qj_days.setText("原时间: "+leave.ySDate +" 至 "+leave.yEDate);
-            holder.qj_status.setText("状态: "+leave.status);
-            holder.qj_date.setText("休时间: "+leave.sDate+" 至 "+ leave.eDate);
-            switch (leave.status){
-                case "待审核":
-                    holder.qj_head.setBackground(new ColorDrawable(Color.rgb(229, 224,64)));
-                    break;
-                case "已批准":
-                    holder.qj_head.setBackground(new ColorDrawable(Color.rgb(46, 177,245)));
-                    break;
-                case "未批准":
-                    holder.qj_head.setBackground(new ColorDrawable(Color.rgb(249, 64,39)));
-                    break;
-                default:
-                    holder.qj_status.setText("状态: 已批准");
-                    holder.qj_head.setBackground(new ColorDrawable(Color.rgb(46, 177,245)));
-                    break;
-            }
-            return convertView;
-        }
-
-        class ViewHolder {
-            TextView qj_head;
-            TextView qj_days;
-            TextView qj_status;
-            TextView qj_date;
-            public ViewHolder(View view) {
-                qj_head = view.findViewById(R.id.qj_head);
-                qj_days = view.findViewById(R.id.qj_days);
-                qj_status = view.findViewById(R.id.qj_status);
-                qj_date = view.findViewById(R.id.qj_date);
-                view.setTag(this);
-            }
-        }
-    }
-
     private int dp2px(int dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
-                getResources().getDisplayMetrics());
+                getApplicationContext().getResources().getDisplayMetrics());
     }
 }

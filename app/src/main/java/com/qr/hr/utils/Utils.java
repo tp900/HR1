@@ -2,6 +2,7 @@ package com.qr.hr.utils;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.util.TypedValue;
 
 public class Utils {
     private static ProgressDialog progressDialog;
@@ -20,5 +21,4 @@ public class Utils {
         }
         progressDialog= null;
     }
-
 }

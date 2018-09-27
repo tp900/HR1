@@ -149,11 +149,10 @@ android:background="#fff">
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/refreshlayout">
-        <com.baoyz.swipemenulistview.SwipeMenuListView
+        <com.qr.hr.swipe.MyListView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/qjlist">
-        </com.baoyz.swipemenulistview.SwipeMenuListView>
+            android:id="@+id/txlist"></com.qr.hr.swipe.MyListView>
     </android.support.v4.widget.SwipeRefreshLayout>
 
 </LinearLayout>

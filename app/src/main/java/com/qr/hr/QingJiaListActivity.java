@@ -36,6 +36,10 @@ import com.qr.hr.interfaces.DialogCallBack;
 import com.qr.hr.modles.Leave;
 import com.qr.hr.modles.Messages;
 import com.qr.hr.modles.QiangJiaDan;
+import com.qr.hr.swipe.Menu;
+import com.qr.hr.swipe.MenuCreator;
+import com.qr.hr.swipe.MenuItem;
+import com.qr.hr.swipe.MyListView;
 import com.qr.hr.utils.DialogFactory;
 import com.qr.hr.utils.HttpUtil;
 import com.qr.hr.utils.ProcessDialogUtil;
@@ -58,14 +62,13 @@ import okhttp3.Response;
 
 public class QingJiaListActivity extends BaseActivity {
     private List<QiangJiaDan> leaves =new ArrayList<>();
-    private SwipeMenuListView swipeMenuListView;
+    private MyListView swipeMenuListView;
     private Button bt_back;
     private Button bt_add;
     private QiangJiaDan cLeave;
     private int cPostion;
     private String empNo;
-    private AppAdapter appAdapter;
-    private SwipeMenuCreator creator;
+    private QiangJiaListAdapter appAdapter;
     private AlertDialog alertDialog;
     private Button bt_find;
     private QingJiaFilter qingJiaFilter;
@@ -107,11 +110,9 @@ public class QingJiaListActivity extends BaseActivity {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         empNo = sharedPreferences.getString("emp_no","");
         InitQiangJiaList(empNo);
-        appAdapter = new AppAdapter(empNo);
+        InitAdapter();
         swipeMenuListView.setAdapter(appAdapter);
-        InitCreator();
-        swipeMenuListView.setMenuCreator(creator);
-        swipeMenuListView.setOnMenuItemClickListener(swipeMenuonClick);
+
         bt_back.setOnClickListener(GoBack);
         bt_add.setOnClickListener(Add);
         bt_find.setOnClickListener(Find);
@@ -131,110 +132,36 @@ public class QingJiaListActivity extends BaseActivity {
             }
         });
     }
-    //设置滑动菜单
-    private void InitCreator(){
-        creator = new SwipeMenuCreator() {
-            @Override
-            public void create(SwipeMenu menu) {
-                if(menu.getViewType()==2){
-                    createMenu2(menu);
-                }
 
+    private void InitAdapter(){
+        //设置滑动菜单
+        final MenuCreator menuCreator = new MenuCreator() {
+            @Override
+            public void CreateMenu(Menu menu) {
+                if(menu.getMenuType()==0){
+                    createMenu(menu);
+                }
             }
-            private void createMenu2(SwipeMenu menu) {
-                SwipeMenuItem item1 = new SwipeMenuItem(
-                        getApplicationContext());
+            private void createMenu(Menu menu) {
+                MenuItem item1 = new MenuItem(QingJiaListActivity.this);
                 item1.setBackground(R.color.colorRefuse);
-                item1.setWidth(dp2px(90));
+                item1.setWidth(dp2px(50));
                 item1.setTitle("删除");
                 item1.setTitleColor(Color.WHITE);
                 item1.setTitleSize(18);
-                menu.addMenuItem(item1);
+                item1.setId(0);
+                menu.menuItems.add(item1);
             }
         };
-    }
-    //滑动菜单点击事件
-    private SwipeMenuListView.OnMenuItemClickListener swipeMenuonClick = new SwipeMenuListView.OnMenuItemClickListener() {
-        @Override
-        public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+        appAdapter = new QiangJiaListAdapter(leaves,QingJiaListActivity.this){
+            @Override
+            public void CreateMenu(Menu menu) {
+                menuCreator.CreateMenu(menu);
+            }
+        };
 
-            final QiangJiaDan leave = leaves.get(position);
-            cLeave = leave;
-            cPostion = position;
-            //Toast.makeText(MainActivity.this,"删除",Toast.LENGTH_SHORT).show();
-            alertDialog = new AlertDialog.Builder(QingJiaListActivity.this)
-                    .setTitle("提示!")
-                    .setMessage("确认要删除?")
-                    .setPositiveButton("删除", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            //开始
-                            alertDialog.dismiss();
-                            dialogUtil.ShowProgressDialog1("处理中...",QingJiaListActivity.this);
-                            //Utils.ShowProgressDialog("处理中...",QingJiaListActivity.this);
-                            String url = "";
-                            url = getResources().getString(R.string.url)+"CancleLeaveQJ";
-                            RequestBody body1 = new FormBody.Builder()
-                                    .add("id",leave.id+"").build();
-                            HttpUtil.SendOkHttpRequest(url, body1, new Callback() {
-                                @Override
-                                public void onFailure(Call call, IOException e) {
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            //Utils.CloseProgressDialog();
-                                            dialogUtil.CloseProgressDialog1();
-                                            Toast.makeText(QingJiaListActivity.this,"服务器连接失败",Toast.LENGTH_LONG).show();
-                                        }
-                                    });
-
-                                }
-
-                                @Override
-                                public void onResponse(Call call, Response response) throws IOException {
-                                    final String sResponse = response.body().string();
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            try{
-                                                JSONObject jsonObject = new JSONObject(sResponse);
-                                                String s = jsonObject.toString();
-                                                Messages messages = new Gson().fromJson(s,Messages.class);
-                                                dialogUtil.CloseProgressDialog1();
-                                                Toast.makeText(QingJiaListActivity.this,messages.msg,Toast.LENGTH_LONG).show();
-                                                if(messages.status==1){
-                                                    leaves.remove(cPostion);
-                                                    appAdapter.notifyDataSetChanged();
-                                                }
-                                            }catch (Exception ex){
-                                                dialogUtil.CloseProgressDialog1();
-                                                Toast.makeText(QingJiaListActivity.this,"未知错误,请重试",Toast.LENGTH_LONG).show();
-                                            }finally {
-                                                dialogUtil.CloseProgressDialog1();
-                                            }
-
-                                        }
-                                    });
-                                }
-                            });
-                        }
-
-                            //结束
-                        }
-                  )
-                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            alertDialog.dismiss();
-                        }
-                    })
-                    .setCancelable(false)
-                    .create();
-                    alertDialog.show();
-
-            return false;
-        }
     };
+
     //返回按钮
     private View.OnClickListener GoBack = new View.OnClickListener() {
         @Override
@@ -464,96 +391,8 @@ public class QingJiaListActivity extends BaseActivity {
             }
         });
     }
-    //内部类
-    class AppAdapter extends BaseAdapter {
-        private String empno;
-        public AppAdapter(String empno){
-            this.empno = empno;
-        }
-        @Override
-        public int getCount() {
-            return leaves.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-
-            return leaves.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public int getViewTypeCount() {
-            // menu type count
-            return 3;
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            // current menu type
-            QiangJiaDan leave = leaves.get(position);
-            if(leave.status.trim().equals("待审核")){
-                return 2;
-            }else{
-                return 0;
-            }
-        }
-
-
-        public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = View.inflate(getApplicationContext(),
-                        R.layout.qingjilist_item, null);
-                new QingJiaListActivity.AppAdapter.ViewHolder(convertView);
-            }
-            QingJiaListActivity.AppAdapter.ViewHolder holder = (QingJiaListActivity.AppAdapter.ViewHolder) convertView.getTag();
-            QiangJiaDan leave = leaves.get(position);
-            String sDays = leave.days+"";
-            String sHours = leave.hours+"";
-            sDays = sDays.endsWith(".0")?sDays.replace(".0",""):sDays;
-            sHours = sHours.endsWith(".0")?sHours.replace(".0",""):sHours;
-            holder.qj_days.setText("时长: "+sDays +" 天 "+sHours +" 小时");
-            holder.qj_status.setText("状态: "+leave.status);
-            holder.qj_date.setText("时间: "+leave.sDate+" 至 "+ leave.eDate);
-            switch (leave.status){
-                case "待审核":
-                    holder.qj_head.setBackground(new ColorDrawable(Color.rgb(229, 224,64)));
-                    break;
-                case "已批准":
-                    holder.qj_head.setBackground(new ColorDrawable(Color.rgb(46, 177,245)));
-                    break;
-                case "未批准":
-                    holder.qj_head.setBackground(new ColorDrawable(Color.rgb(249, 64,39)));
-                    break;
-                default:
-                    holder.qj_status.setText("状态: 已批准");
-                    holder.qj_head.setBackground(new ColorDrawable(Color.rgb(46, 177,245)));
-                    break;
-            }
-            return convertView;
-        }
-
-        class ViewHolder {
-            TextView qj_head;
-            TextView qj_days;
-            TextView qj_status;
-            TextView qj_date;
-            public ViewHolder(View view) {
-                qj_head = view.findViewById(R.id.qj_head);
-                qj_days = view.findViewById(R.id.qj_days);
-                qj_status = view.findViewById(R.id.qj_status);
-                qj_date = view.findViewById(R.id.qj_date);
-                view.setTag(this);
-            }
-        }
-    }
-
     private int dp2px(int dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
-                getResources().getDisplayMetrics());
+                QingJiaListActivity.this.getResources().getDisplayMetrics());
     }
 }

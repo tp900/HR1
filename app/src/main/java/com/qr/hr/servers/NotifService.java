@@ -6,6 +6,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
@@ -101,14 +102,14 @@ public class NotifService extends Service {
     }
     private void ShowNotification(String content){
         //Log.d("ss", "ShowNotification: ");
-        String cId = "cId";
-        String cName = "cName";
+        String cId = "hr";
+        String cName = "系统通知";
         NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         Notification notification = null;
         Intent intent = new Intent(getBaseContext(), MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(),0,intent,0);
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-            NotificationChannel channel = new NotificationChannel(cId,cName,NotificationManager.IMPORTANCE_LOW);
+            NotificationChannel channel = new NotificationChannel(cId,cName,NotificationManager.IMPORTANCE_HIGH);
             notificationManager.createNotificationChannel(channel);
             notification = new Notification.Builder(getBaseContext(),cId)
                     .setChannelId(cId)
@@ -118,7 +119,6 @@ public class NotifService extends Service {
                     .setSmallIcon(R.drawable.logo48)
                     .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.logo96))
                     .setContentIntent(pendingIntent)
-                    .setDefaults(NotificationCompat.DEFAULT_ALL)
                     .setAutoCancel(true)
                     .build();
         }else{
@@ -134,6 +134,7 @@ public class NotifService extends Service {
                     .build();
         }
         notificationManager.notify(1,notification);
+        //startForeground(1,notification);
     }
 
 }
